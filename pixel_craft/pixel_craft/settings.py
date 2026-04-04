@@ -83,6 +83,16 @@ DATABASES = {
     }
 }
 
+import os
+import os
+from pathlib import Path
+
+# ... (rest of your settings)
+
+# Make sure this is exactly right
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators

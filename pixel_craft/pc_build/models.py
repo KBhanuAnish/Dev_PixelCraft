@@ -1,6 +1,7 @@
 from django.db import models
 
-class Component(models.Model):
+class Components(models.Model):
+
     CATEGORY_CHOICES = [
         ('CPU', 'CPU'),
         ('GPU', 'GPU'),
@@ -12,23 +13,23 @@ class Component(models.Model):
         ('Cooler', 'Cooler'),
         ('Monitor', 'Monitor'),
         ('Peripheral', 'Peripheral'),
-        # Add more categories if needed
     ]
 
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=200)
+    brand = models.CharField(max_length=100, blank=True, null=True)
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
-    brand = models.CharField(max_length=50)
-    model = models.CharField(max_length=50)
+
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    stock = models.PositiveIntegerField(default=0)
+
+    image_url = models.URLField(max_length=500, blank=True, null=True)
+
     description = models.TextField(blank=True, null=True)
-    technical_specs = models.JSONField(default=dict, help_text="e.g., {'socket': 'AM4', 'ram_type': 'DDR4'}")
-    
-    # Store image directly in DB
-    image_data = models.BinaryField(blank=True, null=True, help_text="Raw image bytes")
-    image_mime = models.CharField(max_length=50, blank=True, null=True, help_text="e.g., image/png or image/jpeg")
-    
-    release_date = models.DateField(blank=True, null=True)
+    specs=models.TextField(blank=True, null=True)
+
+    rating = models.FloatField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.brand} {self.model} ({self.category})"
+        return self.name

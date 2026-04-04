@@ -11,7 +11,6 @@
         color: #ffffff;
     }
 
-    /* 1. LAYOUT GRID */
     .shop-layout {
         display: grid;
         grid-template-columns: 260px 1fr;
@@ -19,7 +18,6 @@
         padding: 30px 0;
     }
 
-    /* 2. PREMIUM DARK SIDEBAR */
     .filter-sidebar {
         position: sticky;
         top: 100px;
@@ -44,7 +42,6 @@
         margin-bottom: 15px;
     }
 
-    /* Custom Price Inputs */
     .price-box {
         background: #000;
         border: 1px solid #222;
@@ -54,12 +51,12 @@
         font-size: 0.9rem;
         width: 100%;
     }
+
     .price-box:focus {
         border-color: #00c6ff;
         outline: none;
     }
 
-    /* 3. HORIZONTAL PILLS (Quick Access) */
     .pill-wrapper {
         display: flex;
         gap: 10px;
@@ -68,6 +65,7 @@
         margin-bottom: 25px;
         scrollbar-width: none;
     }
+
     .pill-wrapper::-webkit-scrollbar { display: none; }
 
     .pill {
@@ -82,13 +80,13 @@
         transition: 0.3s;
         text-decoration: none;
     }
+
     .pill:hover, .pill.active {
         border-color: #00c6ff;
         color: #fff;
         background: rgba(0, 198, 255, 0.05);
     }
 
-    /* 4. COMPONENT CARD (Noise Aesthetic) */
     .comp-card {
         background: #111;
         border: 1px solid #1a1a1a;
@@ -131,7 +129,7 @@
 
     .item-category { color: #00c6ff; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
     .item-name { font-size: 1.3rem; font-weight: 700; color: #fff; margin: 5px 0; }
-    
+
     .item-specs {
         list-style: none;
         padding: 0;
@@ -140,9 +138,9 @@
         grid-template-columns: 1fr 1fr;
         gap: 10px;
     }
+
     .item-specs li { font-size: 0.8rem; color: #666; }
 
-    /* 5. PRICE & BUTTON */
     .action-container {
         width: 200px;
         text-align: right;
@@ -154,7 +152,7 @@
     }
 
     .item-price { font-size: 1.8rem; font-weight: 800; color: #fff; display: block; }
-    
+
     .btn-add-part {
         background: #00c6ff;
         color: #000;
@@ -166,10 +164,14 @@
         margin-top: 15px;
         transition: 0.3s;
     }
-    .btn-add-part:hover { background: #fff; box-shadow: 0 0 20px rgba(0, 198, 255, 0.4); }
 
-    /* 6. LOAD MORE */
+    .btn-add-part:hover {
+        background: #fff;
+        box-shadow: 0 0 20px rgba(0, 198, 255, 0.4);
+    }
+
     .load-more-area { text-align: center; padding: 40px 0; }
+
     .btn-load {
         background: transparent;
         border: 1px solid #333;
@@ -179,8 +181,8 @@
         font-weight: 600;
         transition: 0.3s;
     }
-    .btn-load:hover { border-color: #00c6ff; color: #00c6ff; }
 
+    .btn-load:hover { border-color: #00c6ff; color: #00c6ff; }
 </style>
 {% endblock %}
 
@@ -199,36 +201,15 @@
                         </div>
                     </div>
 
-                    <div class="filter-section">
-                        <span class="filter-label">Availability</span>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="stock">
-                            <label class="form-check-label" for="stock">Exclude Out of Stock</label>
-                        </div>
-                    </div>
-
-                    <div class="filter-section">
-                        <span class="filter-label">Brands</span>
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox" id="b1">
-                            <label class="form-check-label" for="b1">Intel</label>
-                        </div>
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox" id="b2">
-                            <label class="form-check-label" for="b2">AMD</label>
-                        </div>
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox" id="b3">
-                            <label class="form-check-label" for="b3">NVIDIA</label>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn-add-part w-100 mt-2" style="font-size: 0.75rem;">Apply Filters</button>
+                    <button type="submit" class="btn-add-part w-100 mt-2" style="font-size: 0.75rem;">
+                        Apply Filters
+                    </button>
                 </form>
             </div>
         </aside>
 
         <main>
+
             <div class="pill-wrapper">
                 <a href="#" class="pill active">All Hardware</a>
                 <a href="#" class="pill">Processors</a>
@@ -245,10 +226,11 @@
 
             <div id="item-grid">
                 {% for component in components %}
-                <div class="comp-card" style="animation: fadeInUp 0.5s ease forwards; animation-delay: calc({{ forloop.counter }} * 0.05s);">
+                <div class="comp-card">
+
                     <div class="img-container">
-                        {% if component.image_data %}
-                            <img src="data:{{ component.image_mime }};base64,{{ component.image_data|b64encode }}" alt="{{ component.name }}">
+                        {% if component.image_url %}
+                            <img src="{{ component.image_url }}" alt="{{ component.name }}">
                         {% else %}
                             <img src="{% static 'placeholder.png' %}" alt="Placeholder">
                         {% endif %}
@@ -257,8 +239,7 @@
                     <div class="info-container">
                         <div class="item-category">{{ component.category }}</div>
                         <div class="item-name">{{ component.name }}</div>
-                        <div style="color: #fbbc04; font-size: 0.8rem;">★★★★★ <span class="text-muted ms-1">(256 reviews)</span></div>
-                        
+
                         <ul class="item-specs">
                             {% for key, value in component.technical_specs.items|slice:":4" %}
                                 <li>• {{ value }}</li>
@@ -268,16 +249,13 @@
 
                     <div class="action-container">
                         <span class="item-price">₹{{ component.price }}</span>
-                        <div class="text-success small fw-bold mt-1">In Stock</div>
                         <button class="btn-add-part">Add to Build</button>
                     </div>
+
                 </div>
                 {% endfor %}
             </div>
 
-            <div class="load-more-area">
-                <button class="btn-load">LOAD MORE COMPONENTS</button>
-            </div>
         </main>
 
     </div>
