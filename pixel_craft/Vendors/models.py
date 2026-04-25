@@ -3,6 +3,8 @@ from django.db import models
 # Create your models here.
 from django.db import models
 from Accounts.models import User
+from django import forms
+from pc_build.models import Components
 
 class Vendor(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -25,30 +27,20 @@ class Vendor(models.Model):
 
     def __str__(self):
         return self.shop_name
-from django.db import models
 
-class VendorComponent(models.Model):
-    vendor = models.ForeignKey(
-        'Vendor',
-        on_delete=models.CASCADE,
-        related_name='vendor_products'
-    )
-    component = models.ForeignKey(
-        'pc_build.Components',
-        on_delete=models.CASCADE,
-        related_name='component_vendors'
-    )
-
-    price = models.FloatField()
-    stock = models.PositiveIntegerField()
-
-    is_available = models.BooleanField(default=True)
-
-    updated_at = models.DateTimeField(auto_now=True)
+class InventoryItem(models.Model):
+    vendor = models.ForeignKey('Vendors.Vendor', on_delete=models.CASCADE, related_name='inventory') # Adjust path if Vendor is in a different app
+    component = models.ForeignKey(Components, on_delete=models.CASCADE, related_name='vendor_listings')
+    
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    stock_quantity = models.PositiveIntegerField(default=0)
+    
+    is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ('vendor', 'component')  # prevent duplicates
+        unique_together = ('vendor', 'component')
 
     def __str__(self):
-        return f"{self.vendor.shop_name} - {self.component.name}"
+        return f"{self.vendor.shop_name} | {self.component.name} - ${self.price}"

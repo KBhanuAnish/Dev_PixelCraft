@@ -1,0 +1,117 @@
+{% extends 'Vendors_base.html' %}
+{% load static %}
+
+{% block title %}List New Component | Pixel Craft{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-lg-10">
+        <div class="card bg-dark text-white border-secondary p-4 shadow-lg" style="border-radius: 20px; background: rgba(255,255,255,0.03) !important; backdrop-filter: blur(10px);">
+            <h2 class="fw-bold mb-4"><i class="bi bi-plus-square-dotted me-2 text-info"></i>List Component</h2>
+            
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} mb-4" style="background: rgba(220, 53, 69, 0.1); border-color: rgba(220, 53, 69, 0.3); color: #ff4d4d;">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <div class="row">
+                    <div class="col-md-7 border-end border-secondary pe-4">
+                        <h5 class="text-info mb-3">1. Component Details <small class="text-muted" style="font-size: 0.7rem;">(Global Catalog)</small></h5>
+                        
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Component Name</label>
+                            {{ form.name }}
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label class="form-label small text-muted">Brand</label>
+                                {{ form.brand }}
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small text-muted">Category</label>
+                                {{ form.category }}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Upload Component Photo</label>
+                            {{ form.image }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">General Description</label>
+                            {{ form.description }}
+                        </div>
+                    </div>
+
+                    <div class="col-md-5 ps-4">
+                        <h5 class="text-info mb-3">2. Your Shop Pricing</h5>
+                        
+                        <div class="mb-4 p-3 rounded" style="background: rgba(0, 198, 255, 0.05); border: 1px solid rgba(0, 198, 255, 0.1);">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Your Selling Price ($)</label>
+                                {{ form.price }}
+                            </div>
+                            
+                            <div class="mb-0">
+                                <label class="form-label fw-bold">Stock Available</label>
+                                {{ form.stock_quantity }}
+                            </div>
+                        </div>
+
+                        <div class="mt-5">
+                            <button type="submit" class="btn btn-info w-100 py-3 fw-bold shadow" style="background: linear-gradient(45deg, #0d6efd, #00c6ff); border: none; color: white; border-radius: 8px;">
+                                <i class="bi bi-cloud-arrow-up-fill me-2"></i> Confirm and List
+                            </button>
+                            <a href="{% url 'vendor_inventory' %}" class="btn btn-link text-muted w-100 mt-2 text-decoration-none text-center d-block">Cancel</a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Styling to match your dark theme */
+    input:focus, select:focus, textarea:focus {
+        border-color: #00c6ff !important;
+        box-shadow: 0 0 10px rgba(0, 198, 255, 0.2) !important;
+    }
+    
+    /* Fix for the bright white select dropdown menu */
+    select option {
+        background-color: #1a1d24 !important;
+        color: #ffffff !important;
+        padding: 10px;
+    }
+
+    /* Keep the main select box dark when clicked */
+    .form-select:focus {
+        background-color: rgba(255,255,255,0.05) !important;
+        color: white !important;
+    }
+
+    input[type="file"]::file-selector-button {
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        color: #fff;
+        padding: 6px 12px;
+        border-radius: 4px;
+        margin-right: 15px;
+        transition: 0.3s;
+    }
+    
+    input[type="file"]::file-selector-button:hover {
+        background: #00c6ff;
+        color: #000;
+    }
+</style>
+{% endblock %}

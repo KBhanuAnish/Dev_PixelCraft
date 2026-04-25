@@ -19,7 +19,7 @@ class Components(models.Model):
     brand = models.CharField(max_length=100, blank=True, null=True)
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
 
-    image_url = models.URLField(max_length=500, blank=True, null=True)
+    image = models.ImageField(upload_to='component_images/', blank=True, null=True)
 
     description = models.TextField(blank=True, null=True)
     specs = models.TextField(blank=True, null=True)

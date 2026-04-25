@@ -3,14 +3,16 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login,logout
 from .forms import LoginForm,RegisterForm
-from django.http import HttpResponse
-from .models import User
 from .forms import UserUpdateForm
+from django.shortcuts import render
+from .decorators import ordinary_user_required
+
 
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
 from .forms import LoginForm
 from Vendors.models import Vendor
+
 
 def Login(request):
     if request.method == 'POST':
@@ -24,7 +26,7 @@ def Login(request):
             if user is not None:
                 login(request, user)
                 if Vendor.objects.filter(user=user).exists():
-                    return redirect('/vendors/')  
+                    return redirect('/Vendors/')  
                 else:
                     return redirect('/')           
 
@@ -58,13 +60,15 @@ def Register(request):
         form = RegisterForm()
     return render(request, 'Accounts/Register.html', {'form': form})
 
-@login_required   
+@login_required 
+@ordinary_user_required  
 def Profile(request):
     user=request.user
     return render(request,'Accounts/Profile.html',{'user':user})
 
 
 @login_required
+@ordinary_user_required
 def Profile_edit(request):
     if request.method == 'POST':
         form = UserUpdateForm(request.POST, instance=request.user)
