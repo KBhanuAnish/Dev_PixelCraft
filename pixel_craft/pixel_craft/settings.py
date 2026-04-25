@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'Accounts',
     'pc_build',
     'Ai_Assest',
+    'Vendors',
 ]
 
 MIDDLEWARE = [

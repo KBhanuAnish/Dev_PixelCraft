@@ -27,6 +27,7 @@ urlpatterns = [
     path('Accounts/',include('Accounts.urls')),
     path('build/',include('pc_build.urls')),
     path('chatbot/',include('Ai_Assest.urls')),
+    path('Vendors/',include('Vendors.urls')),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

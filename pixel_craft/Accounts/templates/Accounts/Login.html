@@ -111,11 +111,11 @@
 
         <h3 class="text-center mb-4">Welcome Back 👋</h3>
 
-        <form method="POST">
+        <form method="POST" action="{% url 'Login' %}">
             {% csrf_token %}
 
             {% if form.non_field_errors %}
-                <div class="alert alert-danger py-2">
+                <div class="alert alert-danger py-2" role="alert">
                     {% for error in form.non_field_errors %}
                         {{ error }}
                     {% endfor %}
@@ -124,7 +124,7 @@
 
             <div class="form-floating mb-3">
                 {{ form.username }}
-                <label>Username</label>
+                <label for="{{ form.username.id_for_label }}">Username</label>
                 {% for error in form.username.errors %}
                     <div class="text-danger small mt-1">{{ error }}</div>
                 {% endfor %}
@@ -132,7 +132,7 @@
 
             <div class="form-floating mb-3">
                 {{ form.password }}
-                <label>Password</label>
+                <label for="{{ form.password.id_for_label }}">Password</label>
                 {% for error in form.password.errors %}
                     <div class="text-danger small mt-1">{{ error }}</div>
                 {% endfor %}

@@ -33,7 +33,7 @@
 /* INPUT FIELDS */
 .form-floating input {
     background: rgba(255,255,255,0.1) !important;
-    border: 1px solid transparent; /* Added base transparent border for smooth validation transition */
+    border: 1px solid transparent; 
     color: white !important;
     border-radius: 10px;
     transition: all 0.3s ease;
@@ -69,6 +69,27 @@
     color: #ccc;
 }
 
+/* VENDOR TOGGLE SWITCH STYLING */
+.form-switch .form-check-input {
+    background-color: rgba(255, 255, 255, 0.2);
+    border: none;
+    height: 1.5rem;
+    width: 3rem;
+    cursor: pointer;
+}
+
+.form-switch .form-check-input:checked {
+    background-color: #00c6ff;
+}
+
+.form-switch .form-check-label {
+    cursor: pointer;
+    color: #ccc;
+    font-size: 0.95rem;
+    margin-left: 0.5rem;
+    margin-top: 0.2rem;
+}
+
 /* BUTTON */
 .login-btn {
     background: linear-gradient(45deg, #0d6efd, #00c6ff);
@@ -97,7 +118,7 @@
     color: white;
 }
 
-/* 🔥 CLEAN VALIDATION STYLE (ADAPTED FOR GLASS THEME) */
+/* 🔥 CLEAN VALIDATION STYLE */
 .form-floating input.is-invalid {
     border-color: #ff4d4d !important;
     box-shadow: 0 0 8px rgba(255, 77, 77, 0.4) !important;
@@ -125,6 +146,7 @@
         transform: translateY(0);
     }
 }
+
 </style>
 
 <div class="login-bg">
@@ -133,12 +155,20 @@
 
         <h3 class="text-center mb-4">Create Account ✨</h3>
 
-        <form method="POST" novalidate>
+        <form method="POST" action="{% url 'register' %}" novalidate>
             {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger py-2">
+                    {% for error in form.non_field_errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
 
             <div class="form-floating mb-3">
                 {{ form.username }}
-                <label>Username</label>
+                <label for="{{ form.username.id_for_label }}">Username</label>
                 {% for error in form.username.errors %}
                     <div class="text-danger small mt-1">{{ error }}</div>
                 {% endfor %}
@@ -146,7 +176,7 @@
 
             <div class="form-floating mb-3">
                 {{ form.email }}
-                <label>Email</label>
+                <label for="{{ form.email.id_for_label }}">Email</label>
                 {% for error in form.email.errors %}
                     <div class="text-danger small mt-1">{{ error }}</div>
                 {% endfor %}
@@ -154,7 +184,7 @@
 
             <div class="form-floating mb-3">
                 {{ form.password1 }}
-                <label>Password</label>
+                <label for="{{ form.password1.id_for_label }}">Password</label>
                 <div class="invalid-feedback d-block text-danger small mt-1">
                     {% for error in form.password1.errors %}
                         {{ error }}
@@ -164,12 +194,19 @@
 
             <div class="form-floating mb-3">
                 {{ form.password2 }}
-                <label>Confirm Password</label>
+                <label for="{{ form.password2.id_for_label }}">Confirm Password</label>
                 <div class="invalid-feedback d-block text-danger small mt-1">
                     {% for error in form.password2.errors %}
                         {{ error }}
                     {% endfor %}
                 </div>
+            </div>
+
+            <div class="form-check form-switch mb-4 d-flex align-items-center">
+                {{ form.is_vendor }}
+                <label class="form-check-label" for="{{ form.is_vendor.id_for_label }}">
+                    Register as a Vendor (Create Shop)
+                </label>
             </div>
 
             <button type="submit" class="btn login-btn w-100 mt-2 py-2">
@@ -190,8 +227,8 @@
 
 <script>
 document.querySelectorAll("input").forEach(input => {
-    // Only apply to text/password/email inputs, not hidden token fields
-    if (input.type !== 'hidden') {
+    // Exclude hidden tokens and checkboxes/radios from the text validation logic
+    if (input.type !== 'hidden' && input.type !== 'checkbox' && input.type !== 'radio') {
         input.addEventListener("input", function () {
             if (this.value.length > 2) {
                 this.classList.add("is-valid");
