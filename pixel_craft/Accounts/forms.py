@@ -1,10 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.models import User
-
-from django import forms
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.models import User
+from .models import User
 
 class RegisterForm(UserCreationForm):
     is_vendor = forms.BooleanField(
@@ -48,3 +44,19 @@ class LoginForm(AuthenticationForm):
             'placeholder': 'Password'
         })
     )
+from django import forms
+from .models import User
+
+class UserUpdateForm(forms.ModelForm):
+    class Meta:
+        model = User
+        # Fields the user is allowed to edit
+        fields = ['full_name', 'email', 'phone_number', 'address'] 
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.widget.attrs.update({
+                'class': 'form-control',
+                'style': 'background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1);'
+            })

@@ -1,7 +1,11 @@
 
 from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login,logout
 from .forms import LoginForm,RegisterForm
+from django.http import HttpResponse
+from .models import User
+from .forms import UserUpdateForm
 
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
@@ -19,12 +23,10 @@ def Login(request):
 
             if user is not None:
                 login(request, user)
-
-                # 🔥 Check if user is a vendor
                 if Vendor.objects.filter(user=user).exists():
-                    return redirect('/vendors/')   # vendor dashboard
+                    return redirect('/vendors/')  
                 else:
-                    return redirect('/')           # normal user homepage
+                    return redirect('/')           
 
             else:
                 form.add_error(None, "Invalid username or password")
@@ -56,8 +58,20 @@ def Register(request):
         form = RegisterForm()
     return render(request, 'Accounts/Register.html', {'form': form})
 
-        
+@login_required   
 def Profile(request):
-    pass
+    user=request.user
+    return render(request,'Accounts/Profile.html',{'user':user})
+
+
+@login_required
 def Profile_edit(request):
-    pass
+    if request.method == 'POST':
+        form = UserUpdateForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            return redirect('profile')
+    else:
+        form = UserUpdateForm(instance=request.user)
+
+    return render(request, 'Accounts/profile_edit.html', {'form': form})
