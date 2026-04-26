@@ -95,14 +95,16 @@
         padding: 25px;
         margin-bottom: 20px;
         transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        text-decoration: none;
-        color: inherit;
+        text-decoration: none; /* Added to keep text clean since it's a link now */
+        color: inherit;        /* Added to keep text clean since it's a link now */
+        cursor: pointer;       /* Added to indicate it's clickable */
     }
 
     .comp-card:hover {
         border-color: #333;
         transform: translateX(8px);
         background: #141414;
+        color: inherit;
     }
 
     .img-container {
@@ -151,6 +153,7 @@
         padding-left: 25px;
     }
 
+    .item-price-label { font-size: 0.75rem; color: #666; text-transform: uppercase; font-weight: bold; } /* Added for starting price text */
     .item-price { font-size: 1.8rem; font-weight: 800; color: #fff; display: block; }
 
     .btn-add-part {
@@ -163,6 +166,7 @@
         text-transform: uppercase;
         margin-top: 15px;
         transition: 0.3s;
+        text-align: center; /* Ensures text is centered if it acts like a div */
     }
 
     .btn-add-part:hover {
@@ -226,11 +230,11 @@
 
             <div id="item-grid">
                 {% for component in components %}
-                <div class="comp-card">
+                <a href="{% url 'component_detail' component.id %}" class="comp-card">
 
                     <div class="img-container">
-                        {% if component.image_url %}
-                            <img src="{{ component.image_url }}" alt="{{ component.name }}">
+                        {% if component.image %}
+                            <img src="{{ component.image.url }}" alt="{{ component.name }}">
                         {% else %}
                             <img src="{% static 'placeholder.png' %}" alt="Placeholder">
                         {% endif %}
@@ -240,19 +244,19 @@
                         <div class="item-category">{{ component.category }}</div>
                         <div class="item-name">{{ component.name }}</div>
 
-                        <ul class="item-specs">
-                            {% for key, value in component.technical_specs.items|slice:":4" %}
-                                <li>• {{ value }}</li>
-                            {% endfor %}
-                        </ul>
+                        <div class="text-muted small mt-2" style="line-height: 1.6;">
+                            {{ component.description|truncatewords:20 }}
+                        </div>
                     </div>
 
                     <div class="action-container">
-                        <span class="item-price">₹{{ component.price }}</span>
-                        <button class="btn-add-part">Add to Build</button>
+                        <span class="item-price-label">Starting from</span>
+                        <span class="item-price">₹{{ component.vendor_listings.all.0.price|default:"N/A" }}</span>
+                        
+                        <div class="btn-add-part">View Offers</div>
                     </div>
 
-                </div>
+                </a>
                 {% endfor %}
             </div>
 

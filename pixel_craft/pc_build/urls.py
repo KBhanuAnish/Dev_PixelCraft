@@ -5,6 +5,7 @@ from . import views
 
 urlpatterns = [
     path('', views.components_list, name='components_list'),
+    path('component/<int:pk>/', views.component_detail, name='component_detail'),
 ]
 
 # Serve media files during development
