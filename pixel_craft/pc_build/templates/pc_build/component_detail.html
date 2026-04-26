@@ -176,6 +176,17 @@
 {% block content %}
 <div class="container py-5" style="min-height: 100vh;">
     
+    {% if messages %}
+        <div class="animate-up mb-4" style="animation-delay: 0s;">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show border-secondary" style="background: var(--bg-panel); color: var(--text-main);" role="alert">
+                    <i class="bi bi-info-circle-fill text-info me-2"></i>{{ message }}
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
     <a href="{% url 'components_list' %}" class="text-decoration-none text-muted mb-4 d-inline-flex align-items-center animate-up" style="transition: 0.3s; letter-spacing: 1px; font-size: 0.85rem; text-transform: uppercase;">
         <i class="bi bi-chevron-left me-2 text-info"></i> Return to Hardware Catalog
     </a>
@@ -239,17 +250,18 @@
                             <div class="text-muted" style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px;">Includes GST</div>
                         </div>
 
-                        <div class="d-flex gap-2 col-6 col-md-4 justify-content-end">
-                            <form action="#" method="POST" class="m-0">
+                        <div class="col-12 col-md-4 mt-3 mt-md-0">
+                            <form action="{% url 'add_to_cart' offer.id %}" method="POST" class="m-0 d-flex gap-2 justify-content-end w-100">
                                 {% csrf_token %}
+                                
                                 <button type="submit" class="btn btn-outline-glow rounded-3 px-3 py-2" title="Add to Cart">
                                     <i class="bi bi-cart-plus-fill fs-5"></i>
                                 </button>
-                            </form>
 
-                            <a href="#" class="btn btn-gradient rounded-3 px-4 py-2 d-flex align-items-center justify-content-center flex-grow-1">
-                                Buy Now
-                            </a>
+                                <button type="submit" class="btn btn-gradient rounded-3 px-4 py-2 d-flex align-items-center justify-content-center flex-grow-1">
+                                    Buy Now
+                                </button>
+                            </form>
                         </div>
 
                     </div>

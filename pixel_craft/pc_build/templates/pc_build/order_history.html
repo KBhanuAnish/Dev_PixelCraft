@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}My Orders | Pixel Craft{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="min-height: 100vh; background-color: #060709; color: #fff;">
+    
+    {% if messages %}
+        <div class="mb-4">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show border-secondary" style="background: #13171e; color: #fff;" role="alert">
+                    <i class="bi bi-info-circle-fill text-info me-2"></i>{{ message }}
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <h2 class="fw-bold mb-4">My <span class="text-info">Orders</span></h2>
+
+    {% if orders %}
+        <div class="accordion" id="ordersAccordion">
+            {% for order in orders %}
+            <div class="accordion-item mb-3" style="background: #0d1015; border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; overflow: hidden;">
+                
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed text-white" type="button" data-bs-toggle="collapse" data-bs-target="#order{{ order.id }}" style="background: transparent; box-shadow: none;">
+                        <div class="d-flex w-100 justify-content-between align-items-center me-3">
+                            <div>
+                                <h6 class="mb-0 fw-bold">Order #{{ order.id }}</h6>
+                                <small class="text-muted">{{ order.created_at|date:"M d, Y" }}</small>
+                            </div>
+                            <div class="text-end">
+                                <span class="h5 fw-bold text-info mb-0">₹{{ order.total_amount }}</span>
+                                <span class="badge {% if order.status == 'Pending' %}bg-warning text-dark{% else %}bg-success{% endif %} ms-2">
+                                    {{ order.status }}
+                                </span>
+                            </div>
+                        </div>
+                    </button>
+                </h2>
+
+                <div id="order{{ order.id }}" class="accordion-collapse collapse" data-bs-parent="#ordersAccordion">
+                    <div class="accordion-body" style="background: #11141a; border-top: 1px solid rgba(255,255,255,0.05);">
+                        <p class="small text-muted mb-3"><i class="bi bi-geo-alt-fill text-info me-1"></i> Shipping to: {{ order.shipping_address }}</p>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-dark table-borderless table-sm mb-0 align-middle">
+                                <thead>
+                                    <tr class="text-muted" style="border-bottom: 1px solid #333;">
+                                        <th>Item</th>
+                                        <th>Vendor</th>
+                                        <th>Qty</th>
+                                        <th>Price</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in order.items.all %}
+                                    <tr>
+                                        <td class="fw-bold py-2">{{ item.inventory_item.component.name }}</td>
+                                        <td class="text-muted py-2">{{ item.vendor.shop_name }}</td>
+                                        <td class="py-2">{{ item.quantity }}</td>
+                                        <td class="py-2">₹{{ item.price_at_purchase }}</td>
+                                        <td class="py-2">
+                                            
+                                            <span class="badge {% if item.vendor_status == 'Pending' %}border border-warning text-warning{% elif item.vendor_status == 'Shipped' %}bg-info text-dark{% else %}bg-success{% endif %} mb-1" style="background: transparent;">
+                                                <i class="bi {% if item.vendor_status == 'Delivered' %}bi-check-circle-fill{% elif item.vendor_status == 'Shipped' %}bi-box-seam{% else %}bi-clock{% endif %} me-1"></i>{{ item.vendor_status }}
+                                            </span>
+                                            
+                                            {% if item.vendor_status == 'Shipped' %}
+                                                <form action="{% url 'mark_as_delivered' item.id %}" method="POST" class="d-inline-block ms-2 m-0">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-sm btn-outline-success" style="font-size: 0.7rem; padding: 2px 8px; font-weight: bold; border-radius: 4px; transition: 0.2s;">
+                                                        Mark Received
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                            
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-5 rounded-4" style="background: #111; border: 1px dashed #333;">
+            <i class="bi bi-receipt display-1 text-muted mb-3" style="opacity: 0.3;"></i>
+            <h4 class="text-white fw-bold">No orders yet</h4>
+            <p class="text-muted">You haven't built or bought any PCs from us yet!</p>
+            <a href="{% url 'components_list' %}" class="btn btn-outline-info mt-3">Start Building</a>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    .accordion-button::after {
+        filter: invert(1); /* Makes the dropdown arrow white */
+    }
+    .accordion-button:not(.collapsed) {
+        background-color: rgba(0, 198, 255, 0.1) !important;
+        color: #fff !important;
+    }
+    .btn-outline-success:hover {
+        background-color: #198754;
+        color: white;
+        box-shadow: 0 0 10px rgba(25, 135, 84, 0.5);
+    }
+</style>
+{% endblock %}

@@ -1,6 +1,5 @@
 {% extends "base.html" %}
 {% load static %}
-{% load custom_filters %}
 
 {% block title %}Hardware Inventory | PC Builder{% endblock %}
 
@@ -95,9 +94,9 @@
         padding: 25px;
         margin-bottom: 20px;
         transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        text-decoration: none; /* Added to keep text clean since it's a link now */
-        color: inherit;        /* Added to keep text clean since it's a link now */
-        cursor: pointer;       /* Added to indicate it's clickable */
+        text-decoration: none;
+        color: inherit;
+        cursor: pointer;
     }
 
     .comp-card:hover {
@@ -153,7 +152,7 @@
         padding-left: 25px;
     }
 
-    .item-price-label { font-size: 0.75rem; color: #666; text-transform: uppercase; font-weight: bold; } /* Added for starting price text */
+    .item-price-label { font-size: 0.75rem; color: #666; text-transform: uppercase; font-weight: bold; }
     .item-price { font-size: 1.8rem; font-weight: 800; color: #fff; display: block; }
 
     .btn-add-part {
@@ -166,7 +165,7 @@
         text-transform: uppercase;
         margin-top: 15px;
         transition: 0.3s;
-        text-align: center; /* Ensures text is centered if it acts like a div */
+        text-align: center;
     }
 
     .btn-add-part:hover {
@@ -197,11 +196,15 @@
         <aside>
             <div class="filter-sidebar">
                 <form method="GET">
+                    {% if request.GET.category %}
+                        <input type="hidden" name="category" value="{{ request.GET.category }}">
+                    {% endif %}
+                    
                     <div class="filter-section">
                         <span class="filter-label">Price Range</span>
                         <div class="d-flex flex-column gap-2">
-                            <input type="number" name="min" class="price-box" placeholder="Min Price">
-                            <input type="number" name="max" class="price-box" placeholder="Max Price">
+                            <input type="number" name="min" class="price-box" placeholder="Min Price" value="{{ request.GET.min }}">
+                            <input type="number" name="max" class="price-box" placeholder="Max Price" value="{{ request.GET.max }}">
                         </div>
                     </div>
 
@@ -215,12 +218,12 @@
         <main>
 
             <div class="pill-wrapper">
-                <a href="#" class="pill active">All Hardware</a>
-                <a href="#" class="pill">Processors</a>
-                <a href="#" class="pill">Graphics Cards</a>
-                <a href="#" class="pill">Motherboards</a>
-                <a href="#" class="pill">Memory</a>
-                <a href="#" class="pill">Power Supplies</a>
+                <a href="{% url 'components_list' %}" class="pill {% if not request.GET.category %}active{% endif %}">All Hardware</a>
+                <a href="?category=CPU" class="pill {% if request.GET.category == 'CPU' %}active{% endif %}">Processors</a>
+                <a href="?category=GPU" class="pill {% if request.GET.category == 'GPU' %}active{% endif %}">Graphics Cards</a>
+                <a href="?category=Motherboard" class="pill {% if request.GET.category == 'Motherboard' %}active{% endif %}">Motherboards</a>
+                <a href="?category=RAM" class="pill {% if request.GET.category == 'RAM' %}active{% endif %}">Memory</a>
+                <a href="?category=PSU" class="pill {% if request.GET.category == 'PSU' %}active{% endif %}">Power Supplies</a>
             </div>
 
             <div class="d-flex justify-content-between align-items-center mb-4">
@@ -251,12 +254,18 @@
 
                     <div class="action-container">
                         <span class="item-price-label">Starting from</span>
-                        <span class="item-price">₹{{ component.vendor_listings.all.0.price|default:"N/A" }}</span>
+                        <span class="item-price">₹{{ component.vendor_listings.first.price|default:"N/A" }}</span>
                         
                         <div class="btn-add-part">View Offers</div>
                     </div>
 
                 </a>
+                {% empty %}
+                <div class="text-center py-5 rounded-4" style="background: #111; border: 1px dashed #333;">
+                    <i class="bi bi-radar display-4 text-muted mb-3" style="opacity: 0.5;"></i>
+                    <h5 class="text-white">No hardware found</h5>
+                    <p class="text-muted small">Try adjusting your filters or category.</p>
+                </div>
                 {% endfor %}
             </div>
 
