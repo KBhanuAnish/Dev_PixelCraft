@@ -289,16 +289,17 @@
     </div>
 </section>
 
-
+{% if not user.is_authenticated %}
 <section class="section container fade-up">
     <div class="cta-banner">
         <h2 class="mb-3" style="font-weight: 800; color: #fff;">READY TO UPGRADE?</h2>
         <p style="color:#8892b0; max-width:600px; margin: 0 auto 30px; font-size: 1.1rem;">
             Whether you're building your first entry-level gaming rig or a massive workstation, our tools simplify the entire process.
         </p>
-        <a href="/register/" class="btn-primary-cyber">Create Free Account</a>
+        <a href="/Accounts/register/" class="btn-primary-cyber">Create Free Account</a>
     </div>
 </section>
+{% endif%}
 
 {% endblock %}
 

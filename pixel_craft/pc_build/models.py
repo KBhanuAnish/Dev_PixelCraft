@@ -127,3 +127,125 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.inventory_item.component.name} (Order #{self.order.id})"
+# --- 1. Shared Reference Tables ---
+class Socket(models.Model):
+    name = models.CharField(max_length=20, unique=True) # e.g., "AM5", "LGA 1700"
+    def __str__(self): return self.name
+
+class MemoryGeneration(models.Model):
+    name = models.CharField(max_length=10, unique=True) # e.g., "DDR4", "DDR5"
+    def __str__(self): return self.name
+
+
+# --- 2. Technical Specification Extensions ---
+
+
+class MotherboardSpec(models.Model):
+    FORM_FACTORS = [
+        ('ATX', 'Standard ATX'),
+        ('mATX', 'Micro-ATX'),
+        ('ITX', 'Mini-ITX'),
+        ('E-ATX', 'Extended ATX'),
+    ]
+    component = models.OneToOneField(Components, on_delete=models.CASCADE, related_name='motherboard_spec')
+    socket = models.ForeignKey(Socket, on_delete=models.RESTRICT)
+    form_factor = models.CharField(max_length=10, choices=FORM_FACTORS)
+    memory_generation = models.ForeignKey(MemoryGeneration, on_delete=models.RESTRICT)
+
+    def __str__(self): return f"Specs for {self.component.name}"
+
+class RAMSpec(models.Model):
+    component = models.OneToOneField(Components, on_delete=models.CASCADE, related_name='ram_spec')
+    generation = models.ForeignKey(MemoryGeneration, on_delete=models.RESTRICT)
+    speed_mhz = models.IntegerField()
+
+    def __str__(self): return f"Specs for {self.component.name}"
+# --- Complete the Technical Specification Extensions ---
+
+class PSUSpec(models.Model):
+    component = models.OneToOneField(Components, on_delete=models.CASCADE, related_name='psu_spec')
+    wattage = models.IntegerField(help_text="e.g., 750, 850, 1000")
+    efficiency = models.CharField(max_length=20, help_text="e.g., 80+ Gold, 80+ Bronze")
+    is_modular = models.BooleanField(default=True)
+
+    def __str__(self): return f"PSU Specs for {self.component.name}"
+
+
+class CoolerSpec(models.Model):
+    component = models.OneToOneField(Components, on_delete=models.CASCADE, related_name='cooler_spec')
+    # A single cooler often comes with multiple brackets to support BOTH Intel and AMD!
+    # Therefore, it needs a ManyToMany field to the Socket model.
+    supported_sockets = models.ManyToManyField(Socket)
+    is_liquid_cooler = models.BooleanField(default=False)
+    radiator_size_mm = models.IntegerField(null=True, blank=True, help_text="e.g., 240, 360 (Leave blank for air coolers)")
+
+    def __str__(self): return f"Cooler Specs for {self.component.name}"
+
+
+class CaseSpec(models.Model):
+    # We reuse the Motherboard form factors to map compatibility
+    component = models.OneToOneField(Components, on_delete=models.CASCADE, related_name='case_spec')
+    max_form_factor = models.CharField(max_length=10, choices=MotherboardSpec.FORM_FACTORS)
+    max_gpu_length_mm = models.IntegerField(help_text="Maximum length in mm before the GPU hits the front fans")
+
+    def __str__(self): return f"Case Specs for {self.component.name}"
+
+
+class CPUSpec(models.Model):
+    component = models.OneToOneField(Components, on_delete=models.CASCADE, related_name='cpu_spec')
+    socket = models.ForeignKey(Socket, on_delete=models.RESTRICT)
+    supported_memory = models.ManyToManyField(MemoryGeneration)
+    tdp_watts = models.IntegerField(default=65, help_text="Power consumption in Watts (e.g., 65, 125)") # <-- ADD THIS
+
+class GPUSpec(models.Model):
+    component = models.OneToOneField(Components, on_delete=models.CASCADE, related_name='gpu_spec')
+    length_mm = models.IntegerField()
+    recommended_psu_wattage = models.IntegerField()
+    vram_gb = models.IntegerField()
+    tdp_watts = models.IntegerField(default=200, help_text="Power consumption in Watts (e.g., 200, 320)") # <-- ADD THIS
+
+
+class StorageSpec(models.Model):
+    TYPE_CHOICES = [
+        ('NVMe', 'NVMe M.2'),
+        ('SATA_SSD', 'SATA 2.5" SSD'),
+        ('HDD', 'SATA 3.5" HDD'),
+    ]
+    component = models.OneToOneField(Components, on_delete=models.CASCADE, related_name='storage_spec')
+    drive_type = models.CharField(max_length=15, choices=TYPE_CHOICES)
+    capacity_gb = models.IntegerField(help_text="e.g., 1000 for 1TB, 2000 for 2TB")
+
+    def __str__(self): return f"Storage Specs for {self.component.name}"
+
+@property
+def total_estimated_wattage(self):
+        
+    """Iterates through all parts mounted to the current rig array and sums their electrical power draw limits."""
+    total = 0
+    for item in self.items.all():
+            # Check if the hardware model component has a wattage variable attached to it
+        component = item.inventory_item.component
+            
+            # Use safe getattr fallbacks to look for fields like 'wattage', 'tdp', or 'power_draw'
+        wattage = getattr(component, 'wattage', getattr(component, 'tdp', 0))
+        if wattage:
+            try:
+                total += int(wattage)
+            except (ValueError, TypeError):
+                continue
+    return total
+
+@property
+def is_psu_sufficient(self):
+        """Compares system draw metrics against the attached PSU unit limits."""
+        # Find if a power supply unit is connected
+        psu_item = self.items.filter(inventory_item__component__category__iexact='PSU').first()
+        if psu_item:
+            psu_capacity = getattr(psu_item.inventory_item.component, 'wattage', 0)
+            try:
+                return int(psu_capacity) >= self.total_estimated_wattage
+            except (ValueError, TypeError):
+                pass
+        
+        # If no PSU is added yet, trigger warning if power draw exceeds standard limits
+        return self.total_estimated_wattage < 500

@@ -27,6 +27,11 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv() 
+
 
 # Application definition
 
@@ -42,6 +47,7 @@ INSTALLED_APPS = [
     'pc_build',
     'Ai_Assest',
     'Vendors',
+    'builder',
 ]
 
 MIDDLEWARE = [
@@ -131,3 +137,4 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 AUTH_USER_MODEL = 'Accounts.User'
+LOGIN_URL = 'Login'

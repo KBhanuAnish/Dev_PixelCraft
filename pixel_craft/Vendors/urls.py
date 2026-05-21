@@ -2,7 +2,7 @@ from django.urls import path
 from .views import (
     Home_page, Dashboard, Vendor_profile_edit, Profile, 
     Vendors_Inventory, add_product, edit_inventory_item, 
-    delete_inventory_item, vendor_orders_view  # <--- Added this import
+    delete_inventory_item, vendor_orders_view,vendor_analytics
 )
 
 urlpatterns = [
@@ -13,7 +13,7 @@ urlpatterns = [
     # <--- UPDATED THIS LINE --->
     path('Vendor_orders', vendor_orders_view, name='vendor_orders'), 
     
-    path('Vendor_analytics', Dashboard, name='vendor_analytics'),
+    path('Vendor_analytics', vendor_analytics, name='vendor_analytics'),
     path('Vendor_search', Dashboard, name='vendor_search'),
     path('Vendor_notifications', Dashboard, name='vendor_notifications'),
     path('Vendor_settings', Dashboard, name='vendor_settings'),

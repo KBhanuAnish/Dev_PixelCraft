@@ -286,17 +286,18 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item stagger-2"><a class="nav-link" href="/">Home</a></li>
-                <li class="nav-item stagger-3"><a class="nav-link" href="{% url 'components_list' %}">Build PC</a></li>
-                <li class="nav-item stagger-4"><a class="nav-link" href="{% url 'components_list' %}">Marketplace</a></li>
+                <li class="nav-item stagger-3"><a class="nav-link" href="{% url 'components_list' %}">Components</a></li>
                 <li class="nav-item stagger-5"><a class="nav-link" href="{% url 'chat_bot' %}">AI Assistant</a></li>
+                <li class="nav-item stagger-5"><a class="nav-link" href="{% url 'initiate_build' %}">Build PC</a></li>
             </ul>
-
+            {% if user.is_authenticated %}
             <form class="search-wrapper mx-auto stagger-6" method="GET" action="{% url 'components_list' %}">
                 <div class="search-box">
                     <i class="bi bi-search search-icon"></i>
                     <input type="text" name="q" placeholder="Search components..." class="search-input">
                 </div>
             </form>
+            {%endif%}
 
             <div class="d-flex align-items-center mt-3 mt-lg-0">
                 <a href="{% url 'cart_view' %}" class="icon-btn stagger-6" style="animation-delay: 0.65s;"><i class="bi bi-cart3"></i></a>

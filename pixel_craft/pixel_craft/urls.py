@@ -15,6 +15,7 @@ urlpatterns = [
     path('build/', include('pc_build.urls')),
     path('chatbot/', include('Ai_Assest.urls')),
     path('Vendors/', include('Vendors.urls')),
+    path('build/', include('builder.urls')),
 ]
 
 # This MUST be at the very bottom, outside of the urlpatterns list above

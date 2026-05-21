@@ -32,48 +32,162 @@ from django.contrib import messages
 from .models import Components, InventoryItem
 from .forms import AddComponentFullForm
 # Ensure you import your vendor_required decorator here!
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from .models import Vendor, InventoryItem
+from pc_build.models import Components, Socket, MemoryGeneration, CPUSpec, MotherboardSpec, RAMSpec # Make sure these are imported
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from .models import Vendor, InventoryItem
+# Make sure to import ALL the new spec models!
+from pc_build.models import (
+    Components, Socket, MemoryGeneration, 
+    CPUSpec, MotherboardSpec, RAMSpec, 
+    PSUSpec, CoolerSpec, CaseSpec, GPUSpec, StorageSpec
+)
 
+@login_required
 def add_product(request):
+    try:
+        vendor = request.user.vendor
+    except:
+        messages.error(request, "You need a vendor account to add products.")
+        return redirect('Vendors_Home')
+
+    all_components = Components.objects.all().order_by('category', 'name')
+
     if request.method == 'POST':
-        # request.FILES handles the image upload
-        form = AddComponentFullForm(request.POST, request.FILES)
+        component_mode = request.POST.get('component_mode')
+        price = request.POST.get('price')
+        stock_quantity = request.POST.get('stock_quantity')
+
+        if component_mode == 'existing':
+            component_id = request.POST.get('component_id')
+            component = Components.objects.get(id=component_id)
         
-        if form.is_valid():
-            # 1. Look up the component, or create it if it's brand new
-            component, created = Components.objects.get_or_create(
-                name=form.cleaned_data['name'],
-                brand=form.cleaned_data['brand'],
-                defaults={
-                    'category': form.cleaned_data['category'],
-                    'image': form.cleaned_data.get('image'),
-                    'description': form.cleaned_data['description'],
-                }
+        elif component_mode == 'new':
+            new_category = request.POST.get('new_category')
+            component = Components.objects.create(
+                name=request.POST.get('new_name'),
+                category=new_category,
+                brand=request.POST.get('new_brand', 'Generic'),
+                description=request.POST.get('new_description', ''),
+                specs=request.POST.get('new_specs', ''),
+                image=request.FILES.get('new_image')
             )
 
-            # 2. Check if the vendor is already selling this specific component
-            if InventoryItem.objects.filter(vendor=request.user.vendor, component=component).exists():
-                messages.error(request, f"You are already selling {component.name}. Update it in your inventory instead.")
-                return redirect('vendor_inventory')
+            # --- DYNAMIC SPECIFICATION ROUTING ---
+            
+            if new_category == 'CPU':
+                socket_name = request.POST.get('new_socket') 
+                socket_obj, _ = Socket.objects.get_or_create(name=socket_name)
+                
+                cpu_spec = CPUSpec.objects.create(
+                    component=component,
+                    socket=socket_obj,
+                    tdp_watts=int(request.POST.get('new_cpu_tdp', 65))
+                )
+                
+                mem_gens = request.POST.getlist('new_memory_gens') 
+                for mem_name in mem_gens:
+                    mem_obj, _ = MemoryGeneration.objects.get_or_create(name=mem_name)
+                    cpu_spec.supported_memory.add(mem_obj)
 
-            # 3. Add to Vendor Inventory
-            InventoryItem.objects.create(
-                vendor=request.user.vendor,
-                component=component,
-                price=form.cleaned_data['price'],
-                stock_quantity=form.cleaned_data['stock_quantity']
-            )
+            elif new_category == 'Motherboard':
+                socket_name = request.POST.get('new_socket')
+                socket_obj, _ = Socket.objects.get_or_create(name=socket_name)
+                
+                mem_name = request.POST.get('new_memory_gen')
+                mem_obj, _ = MemoryGeneration.objects.get_or_create(name=mem_name)
+                
+                MotherboardSpec.objects.create(
+                    component=component,
+                    socket=socket_obj,
+                    form_factor=request.POST.get('new_form_factor'),
+                    memory_generation=mem_obj
+                )
 
-            if created:
-                messages.success(request, f"New component '{component.name}' added to catalog and your shop!")
-            else:
-                messages.success(request, f"Linked existing component '{component.name}' to your shop!")
+            elif new_category == 'RAM':
+                mem_name = request.POST.get('new_memory_gen')
+                mem_obj, _ = MemoryGeneration.objects.get_or_create(name=mem_name)
+                
+                RAMSpec.objects.create(
+                    component=component,
+                    generation=mem_obj,
+                    speed_mhz=int(request.POST.get('new_ram_speed', 0))
+                )
+                
+            elif new_category == 'PSU':
+                PSUSpec.objects.create(
+                    component=component,
+                    wattage=int(request.POST.get('new_psu_wattage', 0)),
+                    efficiency=request.POST.get('new_psu_efficiency', ''),
+                    is_modular=(request.POST.get('new_psu_modular') == 'True')
+                )
+                
+            elif new_category == 'Cooling':
+                is_liquid = request.POST.get('new_cooler_liquid') == 'True'
+                rad_size = request.POST.get('new_cooler_rad_size')
+                # Only save rad_size if it's liquid cooling and a number was provided
+                rad_size = int(rad_size) if is_liquid and rad_size else None
+                
+                cooler_spec = CoolerSpec.objects.create(
+                    component=component,
+                    is_liquid_cooler=is_liquid,
+                    radiator_size_mm=rad_size
+                )
+                
+                # Handle comma-separated sockets (e.g., "AM4, AM5, LGA 1700")
+                sockets_str = request.POST.get('new_cooler_sockets', '')
+                for s_name in sockets_str.split(','):
+                    s_name = s_name.strip()
+                    if s_name:
+                        socket_obj, _ = Socket.objects.get_or_create(name=s_name)
+                        cooler_spec.supported_sockets.add(socket_obj)
 
-            return redirect('vendor_inventory')
-    else:
-        form = AddComponentFullForm()
-    
-    return render(request, 'Vendors/vendor_add_component.html', {'form': form})
+            elif new_category == 'Case':
+                CaseSpec.objects.create(
+                    component=component,
+                    max_form_factor=request.POST.get('new_case_form_factor'),
+                    max_gpu_length_mm=int(request.POST.get('new_case_gpu_len', 0))
+                )
 
+            elif new_category == 'GPU':
+                GPUSpec.objects.create(
+                    component=component,
+                    length_mm=int(request.POST.get('new_gpu_len', 0)),
+                    recommended_psu_wattage=int(request.POST.get('new_gpu_psu', 0)),
+                    vram_gb=int(request.POST.get('new_gpu_vram', 0)),
+                    tdp_watts=int(request.POST.get('new_gpu_tdp', 200))
+                )
+
+            elif new_category == 'Storage':
+                StorageSpec.objects.create(
+                    component=component,
+                    drive_type=request.POST.get('new_storage_type'),
+                    capacity_gb=int(request.POST.get('new_storage_cap', 0))
+                )
+
+        # --- INVENTORY CREATION ---
+        inventory_item, created = InventoryItem.objects.get_or_create(
+            vendor=vendor,
+            component=component,
+            defaults={'price': price, 'stock_quantity': stock_quantity}
+        )
+
+        if not created:
+            inventory_item.price = price
+            inventory_item.stock_quantity += int(stock_quantity)
+            inventory_item.save()
+            messages.success(request, f"Updated your existing stock for {component.name}.")
+        else:
+            messages.success(request, f"Successfully added {component.name} to your inventory!")
+
+        return redirect('vendor_inventory')
+
+    return render(request, 'Vendors/vendor_add_component.html', {'all_components': all_components})
 from django.shortcuts import get_object_or_404
 from .models import InventoryItem
 from .forms import InventoryItemForm # You can reuse the simple form we made earlier
@@ -225,17 +339,95 @@ def Dashboard(request):
         'pending_items': pending_items,
         'low_stock': low_stock,
     })
+import json
+from django.db.models.functions import TruncDate
+from django.db.models import Sum
+from django.utils import timezone
+from datetime import timedelta
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from pc_build.models import OrderItem # Adjust if your app name is different
 
 @login_required
 def vendor_analytics(request):
-    vendor = request.user.vendor
-    # Focus on MONEY and TRENDS
-    revenue_data = OrderItem.objects.filter(vendor=vendor, vendor_status='Delivered').aggregate(Sum('price_at_purchase'))
+    try:
+        vendor = request.user.vendor
+    except:
+        messages.error(request, "You do not have a vendor account.")
+        return redirect('Vendors_Home')
+
+    last_30_days = timezone.now() - timedelta(days=30)
     
-    # Logic to find the most popular item
-    best_seller = OrderItem.objects.filter(vendor=vendor).values('inventory_item__component__name').annotate(count=Count('id')).order_by('-count').first()
+    # Base query for delivered/shipped items in the last 30 days
+    delivered_items = OrderItem.objects.filter(
+        vendor=vendor, 
+        vendor_status__in=['Shipped', 'Delivered'],
+        order__created_at__gte=last_30_days
+    )
+
+    # 1. Dashboard Stats (Fully Dynamic)
+    revenue_data = delivered_items.aggregate(Sum('price_at_purchase'))
+    monthly_revenue = revenue_data['price_at_purchase__sum'] or 0
+
+    total_orders = delivered_items.values('order').distinct().count()
+    total_units = delivered_items.aggregate(Sum('quantity'))['quantity__sum'] or 0
+
+    # 2. Top Selling (for the Table & Cards)
+    top_selling = delivered_items.values('inventory_item__component__name').annotate(
+        total_sold=Sum('quantity')
+    ).order_by('-total_sold')[:5]
+
+    best_seller = top_selling.first() if top_selling else None
+
+    # 3. Line Chart (Revenue over time)
+    daily_revenue = delivered_items.annotate(
+        date=TruncDate('order__created_at')
+    ).values('date').annotate(
+        daily_total=Sum('price_at_purchase')
+    ).order_by('date')
+
+    rev_labels = [item['date'].strftime('%b %d') for item in daily_revenue]
+    rev_data = [float(item['daily_total']) for item in daily_revenue]
+
+    # 4. Pie Chart (Category mix)
+    category_sales = delivered_items.values('inventory_item__component__category').annotate(
+        total=Sum('quantity')
+    ).order_by('-total')
+
+    cat_labels = [item['inventory_item__component__category'] for item in category_sales]
+    cat_data = [item['total'] for item in category_sales]
+
+    # 5. Detailed Export Data (CSV Spreadsheet)
+    transactions = delivered_items.values(
+        'order__id',
+        'inventory_item__component__name',
+        'inventory_item__component__category',
+        'price_at_purchase',
+        'quantity',
+        'order__created_at'
+    ).order_by('-order__created_at')
+
+    export_data = [
+        {
+            'order_id': t['order__id'],
+            'component': t['inventory_item__component__name'],
+            'category': t['inventory_item__component__category'],
+            'price': float(t['price_at_purchase']),
+            'qty': t['quantity'],
+            'date': t['order__created_at'].strftime('%Y-%m-%d %H:%M')
+        } for t in transactions
+    ]
 
     return render(request, 'Vendors/analytics.html', {
-        'total_revenue': revenue_data['price_at_purchase__sum'] or 0,
+        'monthly_revenue': monthly_revenue,
+        'total_orders': total_orders,
+        'total_units': total_units,
+        'top_selling': top_selling,
         'best_seller': best_seller,
+        'rev_labels': json.dumps(rev_labels),
+        'rev_data': json.dumps(rev_data),
+        'cat_labels': json.dumps(cat_labels),
+        'cat_data': json.dumps(cat_data),
+        'export_data': json.dumps(export_data),
     })

@@ -81,7 +81,23 @@
         font-family: 'Courier New', Courier, monospace;
         color: #a8b2d1;
         font-size: 0.85rem;
-        line-height: 1.7;
+        line-height: 1.8;
+    }
+
+    .terminal-line {
+        margin-bottom: 6px;
+        display: flex;
+    }
+
+    .terminal-label {
+        color: #00c6ff;
+        font-weight: bold;
+        min-width: 150px;
+        display: inline-block;
+    }
+
+    .terminal-value {
+        color: #fff;
     }
 
     /* Vendor Card Styling */
@@ -213,11 +229,67 @@
                 <p class="text-muted" style="line-height: 1.6; font-size: 0.95rem;">{{ component.description }}</p>
                 
                 <h6 class="text-white mt-5 mb-3 fw-bold text-uppercase" style="letter-spacing: 1px; font-size: 0.8rem;">
-                    <i class="bi bi-sliders text-info me-2"></i>Technical Specifications
+                    <i class="bi bi-sliders text-info me-2"></i>System Architecture Profile
                 </h6>
+                
+                <!-- DYNAMIC SYSTEM PROFILE TERMINAL -->
                 <div class="specs-terminal">
-                    {{ component.specs|default:"// No specifications data found in system module." }}
+                    {% if component.category == 'CPU' and component.cpu_spec %}
+                        <div class="terminal-line"><span class="terminal-label">> SOCKET:</span><span class="terminal-value">{{ component.cpu_spec.socket.name }}</span></div>
+                        <div class="terminal-line"><span class="terminal-label">> ARCH_TDP:</span><span class="terminal-value">{{ component.cpu_spec.tdp_watts }} Watts</span></div>
+                        <div class="terminal-line">
+                            <span class="terminal-label">> MEM_COMPAT:</span>
+                            <span class="terminal-value">
+                                {% for gen in component.cpu_spec.supported_memory.all %}{{ gen.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                            </span>
+                        </div>
+                    
+                    {% elif component.category == 'GPU' and component.gpu_spec %}
+                        <div class="terminal-line"><span class="terminal-label">> VRAM_POOL:</span><span class="terminal-value">{{ component.gpu_spec.vram_gb }} GB</span></div>
+                        <div class="terminal-line"><span class="terminal-label">> FORM_LENGTH:</span><span class="terminal-value">{{ component.gpu_spec.length_mm }} mm</span></div>
+                        <div class="terminal-line"><span class="terminal-label">> DRAW_TDP:</span><span class="terminal-value">{{ component.gpu_spec.tdp_watts }} Watts</span></div>
+                        <div class="terminal-line"><span class="terminal-label">> REQ_POWER:</span><span class="terminal-value">{{ component.gpu_spec.recommended_psu_wattage }} Watts minimum</span></div>
+                    
+                    {% elif component.category == 'Motherboard' and component.motherboard_spec %}
+                        <div class="terminal-line"><span class="terminal-label">> FORM_FACTOR:</span><span class="terminal-value">{{ component.motherboard_spec.form_factor }}</span></div>
+                        <div class="terminal-line"><span class="terminal-label">> BUS_SOCKET:</span><span class="terminal-value">{{ component.motherboard_spec.socket.name }}</span></div>
+                        <div class="terminal-line"><span class="terminal-label">> RAM_SLOTS:</span><span class="terminal-value">{{ component.motherboard_spec.memory_generation.name }} standard</span></div>
+                    
+                    {% elif component.category == 'RAM' and component.ram_spec %}
+                        <div class="terminal-line"><span class="terminal-label">> INTERFACE:</span><span class="terminal-value">{{ component.ram_spec.generation.name }}</span></div>
+                        <div class="terminal-line"><span class="terminal-label">> FREQUENCY:</span><span class="terminal-value">{{ component.ram_spec.speed_mhz }} MHz</span></div>
+                    
+                    {% elif component.category == 'PSU' and component.psu_spec %}
+                        <div class="terminal-line"><span class="terminal-label">> CAPACITY:</span><span class="terminal-value">{{ component.psu_spec.wattage }} Watts</span></div>
+                        <div class="terminal-line"><span class="terminal-label">> EFFICIENCY:</span><span class="terminal-value">{{ component.psu_spec.efficiency }}</span></div>
+                        <div class="terminal-line"><span class="terminal-label">> TOPOLOGY:</span><span class="terminal-value">{% if component.psu_spec.is_modular %}Full Modular{% else %}Fixed Cables{% endif %}</span></div>
+                    
+                    {% elif component.category == 'Case' and component.case_spec %}
+                        <div class="terminal-line"><span class="terminal-label">> MAX_MOBO:</span><span class="terminal-value">{{ component.case_spec.max_form_factor }}</span></div>
+                        <div class="terminal-line"><span class="terminal-label">> MAX_GPU_LEN:</span><span class="terminal-value">{{ component.case_spec.max_gpu_length_mm }} mm</span></div>
+                    
+                    {% elif component.category == 'Storage' and component.storage_spec %}
+                        <div class="terminal-line"><span class="terminal-label">> BUS_TYPE:</span><span class="terminal-value">{{ component.storage_spec.get_drive_type_display }}</span></div>
+                        <div class="terminal-line"><span class="terminal-label">> CAPACITY:</span><span class="terminal-value">{{ component.storage_spec.capacity_gb }} GB</span></div>
+                    
+                    {% elif component.category == 'Cooling' and component.cooler_spec %}
+                        <div class="terminal-line"><span class="terminal-label">> TYPE:</span><span class="terminal-value">{% if component.cooler_spec.is_liquid_cooler %}Liquid (AIO){% else %}Air Tower{% endif %}</span></div>
+                        {% if component.cooler_spec.radiator_size_mm %}
+                            <div class="terminal-line"><span class="terminal-label">> RAD_SIZE:</span><span class="terminal-value">{{ component.cooler_spec.radiator_size_mm }} mm</span></div>
+                        {% endif %}
+                        <div class="terminal-line">
+                            <span class="terminal-label">> ANCHORS:</span>
+                            <span class="terminal-value">
+                                {% for socket in component.cooler_spec.supported_sockets.all %}{{ socket.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                            </span>
+                        </div>
+                    {% else %}
+                        <div class="terminal-line"><span class="terminal-label">> STATUS:</span><span class="terminal-value">Standard Catalog Accessory</span></div>
+                        <div class="terminal-line text-muted" style="font-size: 0.75rem;">No architecture inter-dependencies required.</div>
+                    {% endif %}
                 </div>
+                <!-- END PROFILE TERMINAL -->
+
             </div>
         </div>
 

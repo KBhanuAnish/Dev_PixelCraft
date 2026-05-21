@@ -309,12 +309,6 @@
                 <li class="nav-item stagger-5"><a class="nav-link" href="{% url 'vendor_analytics' %}">Analytics</a></li>
             </ul>
 
-            <form class="search-wrapper mx-auto stagger-6" method="GET" action="{% url 'vendor_search' %}">
-                <div class="search-box">
-                    <i class="bi bi-search search-icon"></i>
-                    <input type="text" name="q" placeholder="Search inventory..." class="search-input">
-                </div>
-            </form>
 
             <div class="d-flex align-items-center mt-3 mt-lg-0">
                 <a href="/" class="icon-btn stagger-6" style="animation-delay: 0.65s;" title="View Storefront">
@@ -335,8 +329,8 @@
                             <li><span class="dropdown-item-text fw-bold text-white">{{ user.username }}'s Shop</span></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{% url 'vendor_profile' %}"><i class="bi bi-person-vcard me-2"></i>Shop Profile</a></li>
-                            <li><a class="dropdown-item" href="{% url 'vendor_settings' %}"><i class="bi bi-gear me-2"></i>Shop Settings</a></li>
-                            <li><a class="dropdown-item" href="{% url 'vendor_payouts' %}"><i class="bi bi-wallet2 me-2"></i>Payouts</a></li>
+                            <li><a class="dropdown-item" href="{% url 'vendor_inventory' %}"><i class="bi bi-box-seam me-2"></i>Inventory</a></li>
+                            <li><a class="dropdown-item" href="{% url 'vendor_analytics' %}"><i class="bi bi-graph-up me-2"></i>Analytics</a></li>
                             <li><a class="dropdown-item" href="{% url 'vendor_profile_edit' %}"><i class="bi bi-pencil-square me-2"></i>Edit Shop Details</a></li>
 
                             <li><hr class="dropdown-divider"></li>

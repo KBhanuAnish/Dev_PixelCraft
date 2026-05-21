@@ -27,9 +27,7 @@
         padding: 25px;
     }
 
-    .filter-section {
-        margin-bottom: 30px;
-    }
+    .filter-section { margin-bottom: 30px; }
 
     .filter-label {
         display: block;
@@ -49,6 +47,7 @@
         padding: 8px 12px;
         font-size: 0.9rem;
         width: 100%;
+        cursor: pointer;
     }
 
     .price-box:focus {
@@ -67,6 +66,7 @@
 
     .pill-wrapper::-webkit-scrollbar { display: none; }
 
+    /* Changed pills from <a> to <button> for form submission */
     .pill {
         background: #111;
         border: 1px solid #222;
@@ -77,7 +77,7 @@
         font-weight: 600;
         white-space: nowrap;
         transition: 0.3s;
-        text-decoration: none;
+        cursor: pointer;
     }
 
     .pill:hover, .pill.active {
@@ -131,17 +131,6 @@
     .item-category { color: #00c6ff; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
     .item-name { font-size: 1.3rem; font-weight: 700; color: #fff; margin: 5px 0; }
 
-    .item-specs {
-        list-style: none;
-        padding: 0;
-        margin: 15px 0 0;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-    }
-
-    .item-specs li { font-size: 0.8rem; color: #666; }
-
     .action-container {
         width: 200px;
         text-align: right;
@@ -166,26 +155,13 @@
         margin-top: 15px;
         transition: 0.3s;
         text-align: center;
+        cursor: pointer;
     }
 
     .btn-add-part:hover {
         background: #fff;
         box-shadow: 0 0 20px rgba(0, 198, 255, 0.4);
     }
-
-    .load-more-area { text-align: center; padding: 40px 0; }
-
-    .btn-load {
-        background: transparent;
-        border: 1px solid #333;
-        color: #888;
-        padding: 12px 50px;
-        border-radius: 50px;
-        font-weight: 600;
-        transition: 0.3s;
-    }
-
-    .btn-load:hover { border-color: #00c6ff; color: #00c6ff; }
 </style>
 {% endblock %}
 
@@ -195,12 +171,23 @@
         
         <aside>
             <div class="filter-sidebar">
-                <form method="GET">
-                    {% if request.GET.category %}
-                        <input type="hidden" name="category" value="{{ request.GET.category }}">
+                <form method="GET" id="filterForm">
+                    
+                    {% if request.GET.q %}
+                        <input type="hidden" name="q" value="{{ request.GET.q }}">
                     {% endif %}
                     
+                    <input type="hidden" name="category" id="categoryInput" value="{{ request.GET.category }}">
+                    
                     <div class="filter-section">
+                        <span class="filter-label">Sort By</span>
+                        <select name="sort" class="price-box mb-4" onchange="this.form.submit()">
+                            <option value="name_asc" {% if request.GET.sort == 'name_asc' %}selected{% endif %}>Name (A-Z)</option>
+                            <option value="name_desc" {% if request.GET.sort == 'name_desc' %}selected{% endif %}>Name (Z-A)</option>
+                            <option value="price_asc" {% if request.GET.sort == 'price_asc' %}selected{% endif %}>Price (Low to High)</option>
+                            <option value="price_desc" {% if request.GET.sort == 'price_desc' %}selected{% endif %}>Price (High to Low)</option>
+                        </select>
+
                         <span class="filter-label">Price Range</span>
                         <div class="d-flex flex-column gap-2">
                             <input type="number" name="min" class="price-box" placeholder="Min Price" value="{{ request.GET.min }}">
@@ -211,23 +198,33 @@
                     <button type="submit" class="btn-add-part w-100 mt-2" style="font-size: 0.75rem;">
                         Apply Filters
                     </button>
+                    <a href="{% url 'components_list' %}" class="btn btn-outline-secondary w-100 mt-2 py-2" style="font-size: 0.75rem;">
+                        Clear All
+                    </a>
                 </form>
             </div>
         </aside>
 
         <main>
-
             <div class="pill-wrapper">
-                <a href="{% url 'components_list' %}" class="pill {% if not request.GET.category %}active{% endif %}">All Hardware</a>
-                <a href="?category=CPU" class="pill {% if request.GET.category == 'CPU' %}active{% endif %}">Processors</a>
-                <a href="?category=GPU" class="pill {% if request.GET.category == 'GPU' %}active{% endif %}">Graphics Cards</a>
-                <a href="?category=Motherboard" class="pill {% if request.GET.category == 'Motherboard' %}active{% endif %}">Motherboards</a>
-                <a href="?category=RAM" class="pill {% if request.GET.category == 'RAM' %}active{% endif %}">Memory</a>
-                <a href="?category=PSU" class="pill {% if request.GET.category == 'PSU' %}active{% endif %}">Power Supplies</a>
+                <button type="button" onclick="setCategory('')" class="pill {% if not request.GET.category %}active{% endif %}">All Hardware</button>
+                <button type="button" onclick="setCategory('CPU')" class="pill {% if request.GET.category == 'CPU' %}active{% endif %}">Processors</button>
+                <button type="button" onclick="setCategory('GPU')" class="pill {% if request.GET.category == 'GPU' %}active{% endif %}">Graphics Cards</button>
+                <button type="button" onclick="setCategory('Motherboard')" class="pill {% if request.GET.category == 'Motherboard' %}active{% endif %}">Motherboards</button>
+                <button type="button" onclick="setCategory('RAM')" class="pill {% if request.GET.category == 'RAM' %}active{% endif %}">Memory</button>
+                <button type="button" onclick="setCategory('Storage')" class="pill {% if request.GET.category == 'Storage' %}active{% endif %}">Storage</button>
+                <button type="button" onclick="setCategory('PSU')" class="pill {% if request.GET.category == 'PSU' %}active{% endif %}">Power Supplies</button>
+                <button type="button" onclick="setCategory('Case')" class="pill {% if request.GET.category == 'Case' %}active{% endif %}">Cases</button>
             </div>
 
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h4 class="fw-bold">Hardware <span style="color: #00c6ff;">Inventory</span></h4>
+                <h4 class="fw-bold">
+                    {% if request.GET.q %}
+                        Search Results for <span style="color: #00c6ff;">"{{ request.GET.q }}"</span>
+                    {% else %}
+                        Hardware <span style="color: #00c6ff;">Inventory</span>
+                    {% endif %}
+                </h4>
                 <span class="text-muted small">Showing {{ components|length }} units</span>
             </div>
 
@@ -254,7 +251,7 @@
 
                     <div class="action-container">
                         <span class="item-price-label">Starting from</span>
-                        <span class="item-price">₹{{ component.vendor_listings.first.price|default:"N/A" }}</span>
+                        <span class="item-price">{% if component.lowest_price %}₹{{ component.lowest_price }}{% else %}N/A{% endif %}</span>
                         
                         <div class="btn-add-part">View Offers</div>
                     </div>
@@ -264,14 +261,22 @@
                 <div class="text-center py-5 rounded-4" style="background: #111; border: 1px dashed #333;">
                     <i class="bi bi-radar display-4 text-muted mb-3" style="opacity: 0.5;"></i>
                     <h5 class="text-white">No hardware found</h5>
-                    <p class="text-muted small">Try adjusting your filters or category.</p>
+                    <p class="text-muted small">Try adjusting your filters, searching a different term, or clearing everything.</p>
                 </div>
                 {% endfor %}
             </div>
-
         </main>
-
     </div>
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // JS Function to attach category to the form and submit it automatically
+    function setCategory(categoryName) {
+        document.getElementById('categoryInput').value = categoryName;
+        document.getElementById('filterForm').submit();
+    }
+</script>
 {% endblock %}

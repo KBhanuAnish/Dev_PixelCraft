@@ -7,16 +7,67 @@ from .models import CartItem, CustomBuild, Order, OrderItem
 
 # Imports from your Vendors models
 from Vendors.models import InventoryItem, Components
+from django.db.models import Q, Min
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from pc_build.models import Components # Adjust this import to match your app name
 
-# ---------------------------------------------------------
-# CATALOG VIEWS
-# ---------------------------------------------------------
+from django.db.models import Min, Q
+# Ensure you import your Component model
 
+@login_required
 def components_list(request):
-    """Shows all hardware in the catalog."""
-    components = Components.objects.all()
-    return render(request, 'pc_build/components_list.html', {'components': components})
+    """Shows all hardware in the catalog with Search, Filter, Sort, and Specs."""
+    
+    # 1. Annotate price AND fetch all related specs in a single query for speed
+    components = Components.objects.annotate(
+        lowest_price=Min('vendor_listings__price') # Keep your existing relation name here!
+    ).select_related(
+        'cpu_spec', 'cpu_spec__socket',
+        'gpu_spec',
+        'motherboard_spec', 'motherboard_spec__socket', 'motherboard_spec__memory_generation',
+        'ram_spec', 'ram_spec__generation',
+        'psu_spec', 'case_spec', 'cooler_spec', 'storage_spec'
+    )
 
+    # 2. Handle Search Query
+    query = request.GET.get('q')
+    if query:
+        components = components.filter(
+            Q(name__icontains=query) | 
+            Q(brand__icontains=query) |
+            Q(description__icontains=query)
+        )
+
+    # 3. Handle Category Filter
+    category = request.GET.get('category')
+    if category:
+        components = components.filter(category=category)
+
+    # 4. Handle Price Range
+    min_price = request.GET.get('min')
+    max_price = request.GET.get('max')
+    
+    if min_price:
+        components = components.filter(lowest_price__gte=min_price)
+    if max_price:
+        components = components.filter(lowest_price__lte=max_price)
+
+    # 5. Handle Sorting
+    sort_by = request.GET.get('sort')
+    if sort_by == 'price_asc':
+        components = components.order_by('lowest_price')
+    elif sort_by == 'price_desc':
+        components = components.order_by('-lowest_price')
+    elif sort_by == 'name_desc':
+        components = components.order_by('-name')
+    else:
+        components = components.order_by('name')
+
+    return render(request, 'pc_build/components_list.html', {
+        'components': components,
+    })
+@login_required
 def component_detail(request, pk):
     """Shows details for a specific component and all vendors selling it."""
     component = get_object_or_404(Components, pk=pk)
@@ -136,11 +187,11 @@ def checkout_view(request):
 
 @login_required
 def order_history(request):
-    """Customer View: Shows all orders placed by this user."""
-    orders = Order.objects.filter(user=request.user).order_by('-created_at').prefetch_related('items__inventory_item__component')
+    """Customer View: Shows all historical orders placed by this user node."""
+    orders = Order.objects.filter(user=request.user).order_by('-created_at').prefetch_related(
+        'items__inventory_item__component'
+    )
     return render(request, 'pc_build/order_history.html', {'orders': orders})
-# Make sure get_object_or_404 is imported at the top of your file!
-
 @login_required
 def mark_as_delivered(request, item_id):
     """Allows the customer to confirm they received a specific shipped item."""
