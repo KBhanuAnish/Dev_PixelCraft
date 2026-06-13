@@ -251,8 +251,7 @@
                     
                     {% if not build.is_psu_sufficient %}
                         <div class="mt-3 text-danger border-top border-secondary pt-2" style="font-size: 0.75rem; line-height: 1.5;">
-                            <i class="bi bi-exclamation-triangle-fill me-1"></i> [CRITICAL_OVERHEAD]: Configuration trace load exceeds system boundary limits. Upgrade the PSU deployment matrix node.
-                        </div>
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i></div>
                     {% else %}
                         <div class="mt-3 text-success border-top border-secondary pt-2" style="font-size: 0.75rem; line-height: 1.5;">
                             <i class="bi bi-check-circle-fill me-1"></i> [STATUS_OK]: Electrical configurations reporting stable. Headroom parameters verified clear.

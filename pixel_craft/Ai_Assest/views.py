@@ -45,7 +45,6 @@ def chat_interface(request):
                         item_wattage = val
                         break
             
-            # Hardcoded simulation fallback metrics to protect UI alignment
             if not item_wattage and slot != 'PSU':
                 if slot == 'CPU': item_wattage = 125
                 elif slot == 'GPU': item_wattage = 120
@@ -66,7 +65,7 @@ def chat_interface(request):
         # Explicitly assign calculated total wattage so the telemetry sidebar can pick it up
         build_context.total_estimated_wattage = calculated_total_wattage
 
-        # 2. Compile immediate tracking profile parameters for greeting analysis
+   
         installed_parts = [
             f"- {item.inventory_item.component.category}: {item.inventory_item.component.name} (₹{item.inventory_item.price})" 
             for item in build_context.items.all()
@@ -81,7 +80,7 @@ def chat_interface(request):
             else:
                 is_safe = calculated_total_wattage < 600
 
-            psu_status = "SUFFICIENT_POWER_HEADROOM" if is_safe else "CRITICAL_POWER_OVERHEAD_ALERT"
+            psu_status = "SUFFICIENT_POWER_HEADROOM" if is_safe else "POWER_OVERHEAD_ALERT"
             
             diagnostic_prompt = f"""
             The user has initialized an active telemetry link to their build workspace.
